@@ -578,7 +578,7 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     fetch(SHEET_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload)
     }).catch(() => {}); // 靜默失敗，不影響前端體驗
   }
