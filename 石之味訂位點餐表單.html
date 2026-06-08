@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>石之味 老牌石頭鍋物｜訂位點餐表單</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans TC', '微軟正黑體', sans-serif;
+      background: #fff8f0;
+      color: #333;
+      padding: 20px;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    header {
+      background: linear-gradient(135deg, #1a1a1a, #3d1a00);
+      color: #f0d080;
+      border-radius: 12px 12px 0 0;
+      padding: 24px 28px;
+      text-align: center;
+    }
+    header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    header p { font-size: 0.85rem; opacity: 0.85; }
+    .store-info {
+      background: #2b1000;
+      color: #ddd;
+      padding: 10px 18px;
+      font-size: 0.82rem;
+      line-height: 1.9;
+    }
+    .steps-banner {
+      background: #f9e4b7;
+      border-left: 4px solid #c0392b;
+      padding: 10px 16px;
+      font-size: 0.88rem;
+      color: #5a1a00;
+      font-weight: 600;
+    }
+    .card {
+      background: white;
+      border-radius: 0 0 12px 12px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    .section-title {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #8b1a00;
+      border-bottom: 2px solid #f5cac3;
+      padding-bottom: 6px;
+      margin: 24px 0 14px;
+    }
+    .section-title:first-child { margin-top: 0; }
+    .form-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+    .form-group { flex: 1; min-width: 150px; display: flex; flex-direction: column; }
+    label { font-size: 0.83rem; font-weight: 600; margin-bottom: 5px; color: #555; }
+    label .req { color: #c0392b; margin-left: 2px; }
+    input[type="text"], input[type="tel"], input[type="date"],
+    input[type="time"], input[type="number"], select, textarea {
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-size: 0.88rem;
+      width: 100%;
+      background: #fafafa;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #c0392b;
+      background: white;
+    }
+    textarea { resize: vertical; min-height: 65px; }
+
+    /* 套餐卡 */
+    .combo-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .combo-card {
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 0.82rem;
+      transition: border-color 0.2s;
+    }
+    .combo-card.selected { border-color: #c0392b; background: #fffaf9; }
+    .combo-header { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .combo-header input[type="checkbox"] { width: 16px; height: 16px; accent-color: #c0392b; }
+    .combo-name { font-weight: bold; color: #8b1a00; font-size: 0.95rem; }
+    .combo-price { font-size: 1rem; color: #c0392b; font-weight: bold; margin-left: auto; white-space: nowrap; }
+    .combo-body { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #f0c0b0; }
+    .combo-card.selected .combo-body { display: block; }
+    .combo-sub-title { font-size: 0.8rem; font-weight: bold; color: #555; margin-bottom: 6px; }
+    .combo-soup-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 12px;
+    }
+    .combo-soup-grid label, .combo-meat-grid label {
+      font-size: 0.78rem; font-weight: normal;
+      background: #fff0ee; border: 1px solid #f0c0b0;
+      border-radius: 5px; padding: 4px 6px; cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      transition: background 0.15s;
+    }
+    .combo-soup-grid label:has(input:checked),
+    .combo-meat-grid label:has(input:checked) {
+      background: #ffd6d0; border-color: #c0392b; font-weight: bold;
+    }
+    .combo-meat-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    /* 人員區 */
+    .person-block {
+      background: #fff9f5;
+      border: 1.5px solid #f0d0c0;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .person-header {
+      font-weight: bold;
+      color: #8b1a00;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .remove-btn {
+      background: #eee;
+      color: #666;
+      border: none;
+      border-radius: 6px;
+      padding: 3px 10px;
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
+    .remove-btn:hover { background: #ddd; }
+    .add-btn {
+      background: #8b1a00;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 18px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .add-btn:hover { background: #c0392b; }
+
+    /* 價格標籤 */
+    .price-tag {
+      display: inline-block;
+      background: #c0392b;
+      color: white;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.75rem;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #8b1a00, #c0392b);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 24px;
+      letter-spacing: 1px;
+    }
+    .submit-btn:hover { opacity: 0.9; }
+
+    /* 摘要 */
+    #summary {
+      display: none;
+      background: white;
+      border: 2px solid #8b1a00;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+    }
+    #summary h2 { color: #8b1a00; margin-bottom: 16px; }
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .summary-table th { background: #8b1a00; color: white; padding: 8px 10px; text-align: left; }
+    .summary-table td { padding: 8px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+    .summary-table tr:last-child td { border-bottom: none; }
+    .summary-info { margin-bottom: 16px; line-height: 2.1; font-size: 0.9rem; }
+    .copy-btn {
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-top: 14px;
+    }
+    .copy-btn:hover { background: #219a52; }
+    .total-row { font-weight: bold; background: #fff5f5; }
+
+    @media (max-width: 480px) {
+      .form-row { flex-direction: column; }
+      .combo-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🪨 石之味 老牌石頭鍋物</h1>
+    <p>台南平豐店｜訂位 & 點餐表單（依真實菜單）</p>
+  </header>
+  <div class="store-info">
+    📍 台南市安平區平豐路387號 &nbsp;|&nbsp;
+    ⏰ 11:00–23:00（最後收客22:00）&nbsp;|&nbsp;
+    📞 06-2980610
+  </div>
+  <div class="steps-banner">
+    📋 點餐兩步驟：① 先選湯鍋 → ② 後選主餐
+  </div>
+
+  <div class="card">
+    <form id="orderForm">
+
+      <!-- 訂位 -->
+      <div class="section-title">📅 訂位資訊</div>
+      <div style="background:#fff8e8;border:1.5px solid #f0c840;border-radius:9px;padding:12px 16px;margin-bottom:16px;font-size:0.88rem;color:#5a3e00;">
+        📌 <strong>人事室聚餐 已確認</strong>：2026年6月15日（一）中午 12:00｜石之味 老牌石頭鍋物台南平豐店
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>訂位日期</label>
+          <input type="date" id="resDate" value="2026-06-15" readonly style="background:#f0f0f0;color:#666;cursor:not-allowed;">
+        </div>
+        <div class="form-group">
+          <label>訂位時間</label>
+          <input type="time" id="resTime" value="12:00" readonly style="background:#f0f0f0;color:#666;cursor:not-allowed;">
+        </div>
+      </div>
+
+      <!-- 套餐選擇（可選） -->
+      <div class="section-title">🎁 套餐方案（選填，若有人要點套餐）</div>
+      <div class="combo-grid" id="comboGrid"></div>
+
+      <!-- 個人點餐 -->
+      <div class="section-title">🥩 各人點餐明細</div>
+      <div id="personList"></div>
+      <button type="button" class="add-btn" onclick="addPerson()">＋ 新增一位</button>
+
+      <!-- 備註 -->
+      <div class="section-title">📝 備註</div>
+      <div class="form-group">
+        <textarea id="notes" placeholder="例如：壽星優惠、過敏食材、素食需求、包廂需求…"></textarea>
+      </div>
+
+      <button type="submit" class="submit-btn">🧾 產生訂位點餐摘要</button>
+    </form>
+
+    <div id="summary">
+      <h2>✅ 訂位點餐摘要</h2>
+      <div id="summaryContent"></div>
+      <button class="copy-btn" onclick="copySummary()">📋 複製文字版（方便傳 LINE 給店家）</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 菜單資料 ──────────────────────────────────
+
+const soups = [
+  // 一般湯底（加湯一律加一般高湯，避免越燉越鹹）
+  { label: '石之味經典風味湯 原味（主廚推薦）', price: 39, group: '一般湯底' },
+  { label: '番茄風味湯', price: 49, group: '一般湯底' },
+  { label: '關東壽喜風味湯', price: 59, group: '一般湯底' },
+  { label: '藥膳風味湯（可素食）', price: 69, group: '一般湯底' },
+  { label: '川味麻辣風味湯（王廚推薦）', price: 99, group: '一般湯底' },
+  { label: '香醇牛奶鍋（附起司牛奶板）', price: 79, group: '一般湯底' },
+  { label: '濃厚南瓜風味湯', price: 79, group: '一般湯底' },
+  { label: '泰式南沙叻沙湯', price: 69, group: '一般湯底' },
+  { label: '蒜香黃金蜆風味湯', price: 99, group: '一般湯底' },
+  // 特殊湯鍋（含肉品、爐煮食材）
+  { label: '海鮮總匯石頭鍋（牛、豬、羊）', price: 420, group: '特殊湯鍋（含肉品食材）' },
+  { label: '香菇雞湯風味鍋', price: 435, group: '特殊湯鍋（含肉品食材）' },
+  { label: '剁皮辣椒雞風味鍋', price: 435, group: '特殊湯鍋（含肉品食材）' },
+  { label: '爆蒜胡椒雞風味鍋', price: 470, group: '特殊湯鍋（含肉品食材）' },
+  { label: '絲瓜蛤蜊蛋鍋', price: 470, group: '特殊湯鍋（含肉品食材）' },
+  { label: '麻油燒酒雞鍋', price: 470, group: '特殊湯鍋（含肉品食材）' },
+];
+
+// 套餐可選湯底（依菜單套餐頁，8選2/3/4）
+const comboSoupOptions = ['麻辣', '原味', '番茄', '叻沙', '牛奶', '藥膳', '南瓜', '黃金蜆'];
+
+const meats = [
+  { label: '美國頂級培根牛 160g', price: 328, extra: '+$88可加量50%' },
+  { label: '紐西蘭極上板腱牛 160g', price: 339, extra: '+$88可加量50%' },
+  { label: '美國嚴選雪花牛 160g', price: 358, extra: '+$88可加量50%' },
+  { label: '美國極上翼板牛 160g', price: 358, extra: '+$90可加量50%' },
+  { label: '日本極上霜降和牛 160g', price: 448, extra: '+$99可加量50%' },
+  { label: '頂級霜降五花豬 160g', price: 277, extra: '+$69可加量50%' },
+  { label: '台灣嚴選梅花豬 160g', price: 288, extra: '+$69可加量50%' },
+  { label: '精選松阪豬 160g', price: 348, extra: '+$80可加量50%' },
+  { label: '特選伊比利豬 160g', price: 358, extra: '+$102可加量50%' },
+  { label: '紐澳雪花小羔羊 160g', price: 290, extra: '+$79可加量50%' },
+];
+
+const seafoods = [
+  { label: '鯛魚', price: 110 }, { label: '鮭魚', price: 120 },
+  { label: '蛤蜊', price: 110 }, { label: '甜白蝦', price: 110 },
+  { label: '鱸魚蟹', price: 180 }, { label: '大花枝', price: 190 },
+  { label: '大草蝦', price: 350 }, { label: '花枝漿', price: 120 },
+  { label: '蝦仁漿', price: 130 }, { label: '鮮蚵', price: 110 },
+  { label: '生食級干貝', price: 220 }, { label: '鮑魚', price: 320 },
+  { label: '蛤蜊味拼盤', price: 410 }, { label: '石之味海味盛合', price: 980 },
+  { label: '龍蝦拼盤', price: 1488 }, { label: '大龍蝦', price: 799 },
+  { label: '透圓圓拼盤', price: 220 },
+];
+
+const hotpotSides = [
+  { label: '魚冊', price: 60 }, { label: '菌蔓（冬季限定）', price: 60 },
+  { label: '綠花椰菜', price: 60 }, { label: '龍蝦沙拉丸', price: 50 },
+  { label: '手工絞類拼盤', price: 120 }, { label: '香菇魚丸', price: 50 },
+  { label: '鴨肉丸', price: 50 }, { label: '麻辣丸', price: 50 },
+  { label: '牛肉丸', price: 60 }, { label: '芋泥貢丸', price: 50 },
+  { label: '爆漿起司球', price: 60 }, { label: '排骨酥', price: 85 },
+  { label: '田園蔬菜盛合', price: 120 },
+];
+
+const hotFoods = [
+  { label: '麻辣鴨血', price: 60 }, { label: '麻辣豆腐', price: 65 },
+  { label: '麻辣雙拼', price: 55 }, { label: '古早味炸麻糬', price: 80 },
+  { label: '麻油炸彈', price: 60 }, { label: '古早味炸湯圓', price: 50 },
+];
+
+const combos = [
+  {
+    name: '雙人極上盛台金鑛', price: 699, ppl: 2, pickSoups: 2,
+    meats: ['五花豬', '台灣豬', '松阪豬'],
+    note: '請勾選2種湯底 ＋ 勾選肉品'
+  },
+  {
+    name: '雙人極上盛台牛＋鍋', price: 799, ppl: 2, pickSoups: 2,
+    meats: ['培根牛', '雪花牛', '五花豬'],
+    note: '請勾選2種湯底 ＋ 勾選肉品'
+  },
+  {
+    name: '雙人極上盛台全牛', price: 999, ppl: 2, pickSoups: 2,
+    meats: ['培根牛', '板腱牛', '翼板牛'],  // 原菜單顯示為翼板牛
+    note: '請勾選2種湯底 ＋ 勾選肉品'
+  },
+  {
+    name: '雙人極上海味牛＋鍋', price: 1099, ppl: 2, pickSoups: 2,
+    meats: ['板腱牛', '伊比利豬', '海鮮盤'],
+    note: '請勾選2種湯底 ＋ 勾選肉品'
+  },
+  {
+    name: '三人頂上頂級草蝦餐', price: 1690, ppl: 3, pickSoups: 3,
+    meats: ['頂級草蝦（含）', '梅花豬', '台灣豬', '梅花牛', '小羔羊', '古早味炸類（六選一）'],
+    note: '請勾選3種湯底 ＋ 確認肉品'
+  },
+  {
+    name: '四人頂上龍王盛合餐', price: 2980, ppl: 4, pickSoups: 4,
+    meats: ['培根牛', '板腱牛', '雪花牛', '台灣豬', '松阪豬', '小羔羊', '龍蝦（含）', '干貝', '花枝漿', '蝦仁漿', '古早味炸類（六選一）'],
+    note: '請勾選4種湯底 ＋ 確認肉品'
+  },
+];
+
+// ── 套餐渲染 ──────────────────────────────────
+const comboGrid = document.getElementById('comboGrid');
+combos.forEach((c, i) => {
+  const div = document.createElement('div');
+  div.className = 'combo-card';
+  div.id = `combo-card-${i}`;
+
+  const soupChecks = comboSoupOptions.map((s, si) =>
+    `<label><input type="checkbox" class="combo-soup" name="combo-soup-${i}" value="${s}"> ${s}</label>`
+  ).join('');
+
+  const meatChecks = c.meats.map((m, mi) =>
+    `<label><input type="checkbox" class="combo-meat" value="${m}"> ${m}</label>`
+  ).join('');
+
+  div.innerHTML = `
+    <div class="combo-header">
+      <input type="checkbox" class="combo-check" id="combo-chk-${i}"
+        data-name="${c.name}" data-price="${c.price}" data-ppl="${c.ppl}" data-idx="${i}">
+      <label for="combo-chk-${i}" style="font-weight:normal;margin:0;font-size:0.82rem;cursor:pointer;">
+        <span class="combo-name">${c.name}</span>
+        <span style="color:#666;font-size:0.78rem;margin-left:6px;">（${c.ppl}人）</span>
+      </label>
+      <span class="combo-price">$${c.price}</span>
+    </div>
+    <div class="combo-body">
+      <div class="combo-sub-title">① 選湯底（請選${c.pickSoups}種）</div>
+      <div class="combo-soup-grid">${soupChecks}</div>
+      <div class="combo-sub-title">② 選肉品</div>
+      <div class="combo-meat-grid">${meatChecks}</div>
+      <div style="font-size:0.75rem;color:#999;margin-top:6px;">${c.note}</div>
+    </div>
+  `;
+
+  div.querySelector(`#combo-chk-${i}`).addEventListener('change', function() {
+    div.classList.toggle('selected', this.checked);
+  });
+
+  comboGrid.appendChild(div);
+});
+
+// ── 建立湯底 <select> ─────────────────────────
+function buildSoupSelect(id) {
+  let html = '<option value="">請選擇湯底</option>';
+  let lastGroup = '';
+  soups.forEach(s => {
+    if (s.group !== lastGroup) {
+      if (lastGroup) html += '</optgroup>';
+      html += `<optgroup label="── ${s.group} ──">`;
+      lastGroup = s.group;
+    }
+    html += `<option value="${s.label}（$${s.price}）">${s.label}　$${s.price}</option>`;
+  });
+  if (lastGroup) html += '</optgroup>';
+  return `<select id="${id}" class="p-soup" required>${html}</select>`;
+}
+
+// 建立主餐 <select>
+function buildMeatSelect(id) {
+  let html = '<option value="">請選擇主餐</option>';
+  html += '<optgroup label="── 牛肉 ──">';
+  meats.filter(m => m.label.includes('牛')).forEach(m => {
+    html += `<option value="${m.label}（$${m.price}）">${m.label}　$${m.price}</option>`;
+  });
+  html += '</optgroup><optgroup label="── 豬 / 羊 ──">';
+  meats.filter(m => !m.label.includes('牛')).forEach(m => {
+    html += `<option value="${m.label}（$${m.price}）">${m.label}　$${m.price}</option>`;
+  });
+  html += '</optgroup><optgroup label="── 單點海鮮 ──">';
+  seafoods.forEach(s => {
+    html += `<option value="${s.label}（$${s.price}）">${s.label}　$${s.price}</option>`;
+  });
+  html += '</optgroup><option value="（套餐中）不另選主餐">（套餐中）不另選主餐</option>';
+  return `<select id="${id}" class="p-meat">${html}</select>`;
+}
+
+// 建立加點 checkbox
+function buildSidesChecks(prefix) {
+  let html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">';
+  [...hotpotSides, ...hotFoods].forEach((item, i) => {
+    html += `<label style="font-size:0.78rem;background:#fff0ee;border:1px solid #f0c0b0;border-radius:5px;padding:3px 8px;cursor:pointer;">
+      <input type="checkbox" class="p-side" value="${item.label}（$${item.price}）" style="margin-right:3px;">
+      ${item.label} $${item.price}
+    </label>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+// ── 人員區 ───────────────────────────────────
+let personCount = 0;
+
+function addPerson() {
+  personCount++;
+  const id = personCount;
+  const div = document.createElement('div');
+  div.className = 'person-block';
+  div.id = `person-${id}`;
+  div.innerHTML = `
+    <div class="person-header">
+      <span>第 ${id} 位</span>
+      ${id > 1 ? `<button type="button" class="remove-btn" onclick="removePerson(${id})">✕ 移除</button>` : ''}
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>姓名／暱稱</label>
+        <input type="text" class="p-name" placeholder="例如：小明">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>① 湯底選擇 <span class="req">*</span></label>
+        ${buildSoupSelect(`soup-${id}`)}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>② 主餐 / 肉品</label>
+        ${buildMeatSelect(`meat-${id}`)}
+      </div>
+      <div class="form-group" style="min-width:120px;max-width:160px;">
+        <label>加量50%？</label>
+        <select class="p-extra">
+          <option value="">不加量</option>
+          <option value="加量50%">加量50%</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label>加點（火鍋料 / 熱食）</label>
+      ${buildSidesChecks(id)}
+    </div>
+    <div class="form-group">
+      <label>個人特殊需求</label>
+      <input type="text" class="p-note" placeholder="例如：不吃辣、過敏食材、壽星">
+    </div>
+  `;
+  document.getElementById('personList').appendChild(div);
+}
+
+function removePerson(id) {
+  const el = document.getElementById(`person-${id}`);
+  if (el) el.remove();
+}
+
+addPerson();
+
+// ── 送出 ─────────────────────────────────────
+document.getElementById('orderForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const date = document.getElementById('resDate').value;
+  const time = document.getElementById('resTime').value;
+  const notes = document.getElementById('notes').value;
+
+  // 套餐
+  const selectedCombos = [];
+  document.querySelectorAll('.combo-check:checked').forEach(chk => {
+    const idx = chk.dataset.idx;
+    const card = document.getElementById(`combo-card-${idx}`);
+    const soups = [...card.querySelectorAll('.combo-soup:checked')].map(s => s.value);
+    const cmeats = [...card.querySelectorAll('.combo-meat:checked')].map(m => m.value);
+    selectedCombos.push({
+      name: chk.dataset.name,
+      price: chk.dataset.price,
+      soups, cmeats
+    });
+  });
+
+  // 人員
+  const persons = [];
+  document.querySelectorAll('.person-block').forEach((block, i) => {
+    const pName = block.querySelector('.p-name').value || `第${i+1}位`;
+    const soup = block.querySelector('.p-soup').value || '未選';
+    const meat = block.querySelector('.p-meat').value || '未選';
+    const extra = block.querySelector('.p-extra').value;
+    const sides = [...block.querySelectorAll('.p-side:checked')].map(s => s.value);
+    const note = block.querySelector('.p-note').value;
+    persons.push({ pName, soup, meat, extra, sides, note });
+  });
+
+  let rows = persons.map(p => `
+    <tr>
+      <td><b>${p.pName}</b></td>
+      <td>${p.soup}</td>
+      <td>${p.meat}${p.extra ? `<br><span style="color:#c0392b;font-size:0.78rem;">${p.extra}</span>` : ''}</td>
+      <td>${p.sides.length ? p.sides.join('<br>') : '—'}</td>
+      <td>${p.note || '—'}</td>
+    </tr>
+  `).join('');
+
+  const comboHtml = selectedCombos.length
+    ? `<div style="margin-bottom:14px;">
+        <b>套餐：</b><br>
+        ${selectedCombos.map(c =>
+          `<div style="margin:6px 0 4px;padding:8px 12px;background:#fff5f5;border-radius:7px;font-size:0.85rem;">
+            <b>${c.name}</b> $${c.price}<br>
+            湯底：${c.soups.length ? c.soups.join('、') : '（未選）'}<br>
+            肉品：${c.cmeats.length ? c.cmeats.join('、') : '（未選）'}
+          </div>`
+        ).join('')}
+      </div>` : '';
+
+  const html = `
+    <div class="summary-info">
+      🗓️ <b>日期：</b>${date}&emsp;⏰ <b>時間：</b>${time}<br>
+      🏢 <b>人事室聚餐｜石之味 老牌石頭鍋物台南平豐店</b><br>
+      ${notes ? `📝 <b>備註：</b>${notes}` : ''}
+    </div>
+    ${comboHtml}
+    <table class="summary-table">
+      <thead><tr>
+        <th>姓名</th><th>湯底</th><th>主餐</th><th>加點</th><th>特殊需求</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  document.getElementById('summaryContent').innerHTML = html;
+  document.getElementById('summary').style.display = 'block';
+  document.getElementById('summary').scrollIntoView({ behavior: 'smooth' });
+});
+
+// ── 複製文字 ─────────────────────────────────
+function copySummary() {
+  const date = document.getElementById('resDate').value;
+  const time = document.getElementById('resTime').value;
+  const notes = document.getElementById('notes').value;
+
+  const selectedCombos2 = [];
+  document.querySelectorAll('.combo-check:checked').forEach(chk => {
+    const idx = chk.dataset.idx;
+    const card = document.getElementById(`combo-card-${idx}`);
+    const soups = [...card.querySelectorAll('.combo-soup:checked')].map(s => s.value);
+    const cmeats = [...card.querySelectorAll('.combo-meat:checked')].map(m => m.value);
+    selectedCombos2.push({ name: chk.dataset.name, price: chk.dataset.price, soups, cmeats });
+  });
+
+  let text = `【石之味 台南平豐店｜人事室聚餐點餐】\n`;
+  text += `日期：${date}　時間：${time}\n`;
+  if (notes) text += `備註：${notes}\n`;
+  if (selectedCombos2.length) {
+    text += `\n套餐：\n`;
+    selectedCombos2.forEach(c => {
+      text += `  ${c.name}（$${c.price}）\n`;
+      text += `    湯底：${c.soups.join('、') || '未選'}\n`;
+      text += `    肉品：${c.cmeats.join('、') || '未選'}\n`;
+    });
+  }
+  text += `\n─── 各人點餐 ───\n`;
+
+  document.querySelectorAll('.person-block').forEach((block, i) => {
+    const pName = block.querySelector('.p-name').value || `第${i+1}位`;
+    const soup = block.querySelector('.p-soup').value || '未選';
+    const meat = block.querySelector('.p-meat').value || '未選';
+    const extra = block.querySelector('.p-extra').value;
+    const sides = [...block.querySelectorAll('.p-side:checked')].map(s => s.value);
+    const note = block.querySelector('.p-note').value;
+    text += `\n${pName}\n`;
+    text += `  湯底：${soup}\n`;
+    text += `  主餐：${meat}${extra ? `（${extra}）` : ''}\n`;
+    if (sides.length) text += `  加點：${sides.join('、')}\n`;
+    if (note) text += `  需求：${note}\n`;
+  });
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert('✅ 已複製！可直接貼到 LINE 傳給店家。');
+  });
+}
+</script>
+</body>
+</html>
