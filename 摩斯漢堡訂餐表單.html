@@ -273,6 +273,9 @@ function removePerson(id) {
 
 addPerson();
 
+// ── Google Sheet 後台 URL（沿用既有部署）─────────
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz1ew0XFdHKJFGhV1xDmfayOuPkcM5RkGPHAeuQ42bxeQCGfx_zLZVxO19N1VRumrt5Fg/exec';
+
 // ── 送出 ─────────────────────────────────────
 document.getElementById('orderForm').addEventListener('submit', function(e) {
   e.preventDefault();
@@ -288,6 +291,29 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     const note = block.querySelector('.p-note').value;
     persons.push({ pName, main, sides, drinksSel, desserts2, note });
   });
+
+  // ── 送資料到 Google Sheet（沿用既有後台）──
+  if (SHEET_URL) {
+    const payload = {
+      submitTime: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
+      date: '2026-06-15', time: '12:00',
+      combos: '',
+      globalNote: notes,
+      persons: persons.map(p => ({
+        name: p.pName,
+        soup: '',
+        meat: p.main,
+        sides: [...p.sides, ...p.drinksSel, ...p.desserts2].join('、'),
+        note: p.note
+      }))
+    };
+    fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  }
 
   let rows = persons.map(p => `
     <tr>
