@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOS BURGER 摩斯漢堡｜人事室聚餐點餐表單</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family:'Noto Sans TC','微軟正黑體',sans-serif; background:#fff5f0; color:#333; padding:20px; }
+  .container { max-width:720px; margin:0 auto; }
+  header {
+    background:linear-gradient(135deg,#c8102e,#e8344f);
+    color:#fff; border-radius:12px 12px 0 0; padding:24px 28px; text-align:center;
+  }
+  header h1 { font-size:1.5rem; margin-bottom:4px; }
+  header p { font-size:0.85rem; opacity:0.9; }
+  .info-banner {
+    background:#fff8e0; border-left:4px solid #c8102e; padding:12px 18px;
+    font-size:0.88rem; color:#5a1500; font-weight:600;
+  }
+  .card { background:#fff; border-radius:0 0 12px 12px; padding:28px; box-shadow:0 2px 12px rgba(0,0,0,0.1); }
+  .section-title {
+    font-size:1rem; font-weight:bold; color:#c8102e;
+    border-bottom:2px solid #ffd9c0; padding-bottom:6px; margin:24px 0 14px;
+  }
+  .section-title:first-child { margin-top:0; }
+  .form-group { display:flex; flex-direction:column; margin-bottom:14px; }
+  label { font-size:0.83rem; font-weight:600; margin-bottom:5px; color:#555; }
+  label .req { color:#c8102e; margin-left:2px; }
+  input[type="text"], input[type="date"], input[type="time"], select, textarea {
+    border:1.5px solid #ddd; border-radius:8px; padding:8px 11px;
+    font-size:0.88rem; width:100%; background:#fafafa;
+  }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:#c8102e; background:#fff; }
+  textarea { resize:vertical; min-height:60px; }
+
+  .person-block {
+    background:#fffaf6; border:1.5px solid #ffd9c0; border-radius:10px;
+    padding:16px; margin-bottom:14px;
+  }
+  .person-header {
+    font-weight:bold; color:#c8102e; margin-bottom:12px; font-size:0.95rem;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .remove-btn { background:#eee; color:#666; border:none; border-radius:6px; padding:3px 10px; cursor:pointer; font-size:0.78rem; }
+  .remove-btn:hover { background:#ddd; }
+  .add-btn {
+    background:#c8102e; color:#fff; border:none; border-radius:8px;
+    padding:9px 18px; cursor:pointer; font-size:0.85rem; font-weight:600; margin-top:4px;
+  }
+  .add-btn:hover { background:#a30d25; }
+
+  .check-grid { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+  .check-grid label {
+    font-size:0.78rem; font-weight:normal; background:#fff0eb;
+    border:1px solid #ffc9ad; border-radius:5px; padding:4px 8px; cursor:pointer;
+    display:flex; align-items:center; gap:4px; margin:0;
+  }
+  .check-grid input:checked + span, .check-grid label:has(input:checked) {
+    background:#ffd9c0; font-weight:bold;
+  }
+
+  .submit-btn {
+    width:100%; background:linear-gradient(135deg,#a30d25,#c8102e); color:#fff;
+    border:none; border-radius:10px; padding:14px; font-size:1rem; font-weight:bold;
+    cursor:pointer; margin-top:24px; letter-spacing:1px;
+  }
+  .submit-btn:hover { opacity:0.9; }
+
+  #summary { display:none; background:#fff; border:2px solid #c8102e; border-radius:12px; padding:24px; margin-top:24px; }
+  #summary h2 { color:#c8102e; margin-bottom:16px; }
+  .summary-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  .summary-table th { background:#c8102e; color:#fff; padding:8px 10px; text-align:left; }
+  .summary-table td { padding:8px 10px; border-bottom:1px solid #eee; vertical-align:top; }
+  .summary-table tr:last-child td { border-bottom:none; }
+  .summary-info { margin-bottom:16px; line-height:2.1; font-size:0.9rem; }
+  .copy-btn {
+    background:#27ae60; color:#fff; border:none; border-radius:8px;
+    padding:10px 20px; cursor:pointer; font-size:0.88rem; font-weight:600; margin-top:14px;
+  }
+  .copy-btn:hover { background:#219a52; }
+  @media (max-width:480px) { .form-row { flex-direction:column; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🍔 MOS BURGER 摩斯漢堡</h1>
+    <p>人事室聚餐｜訂餐表單</p>
+  </header>
+  <div class="info-banner">
+    📌 人事室聚餐：2026年6月15日（一）中午 12:00｜MOS BURGER 摩斯漢堡
+  </div>
+
+  <div class="card">
+    <form id="orderForm">
+
+      <div class="section-title">📝 備註</div>
+      <div class="form-group">
+        <textarea id="notes" placeholder="例如：不吃辣、過敏食材等（整體備註）"></textarea>
+      </div>
+
+      <div class="section-title">🍔 各人點餐明細</div>
+      <div id="personList"></div>
+      <button type="button" class="add-btn" onclick="addPerson()">＋ 新增一位</button>
+
+      <button type="submit" class="submit-btn">🧾 產生點餐摘要</button>
+    </form>
+
+    <div id="summary">
+      <h2>✅ 點餐摘要</h2>
+      <div id="summaryContent"></div>
+      <button class="copy-btn" onclick="copySummary()">📋 複製文字版（方便傳 LINE）</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 菜單資料 ──────────────────────────────────
+
+const mains = [
+  // 期間限定
+  { label: '【期間限定】柚香明太子海洋珍珠堡 套餐$220／單點$160', group: '期間限定' },
+  { label: '【期間限定】海老雙蝦堡 套餐$225／單點$185', group: '期間限定' },
+  // 米漢堡（珍珠堡）
+  { label: '超級大麥 元氣牛肉珍珠堡 套餐$215／單點$115', group: '米漢堡（珍珠堡）' },
+  { label: '超級大麥 元氣摩力珍珠堡（植物肉）套餐$215／單點$115', group: '米漢堡（珍珠堡）' },
+  { label: '超級大麥 海洋珍珠堡 套餐$185／單點$85', group: '米漢堡（珍珠堡）' },
+  { label: '超級大麥 燒肉珍珠堡 套餐$180／單點$80', group: '米漢堡（珍珠堡）' },
+  { label: '超級大麥 薰腿珍珠堡 套餐$175／單點$75', group: '米漢堡（珍珠堡）' },
+  { label: '超級大麥 杏鮑菇珍珠堡（植物肉）套餐$180／單點$80', group: '米漢堡（珍珠堡）' },
+  // 經典漢堡
+  { label: '和風蔬活牛肉堡 套餐$200／單點$100', group: '經典漢堡' },
+  { label: '輕檸雙牛堡 套餐$200／單點$100', group: '經典漢堡' },
+  { label: '摩斯吉士濃堡 套餐$175／單點$75', group: '經典漢堡' },
+  { label: '摩斯鱈魚堡 套餐$170／單點$70', group: '經典漢堡' },
+  { label: '擴鮮綠元氣牛肉堡 套餐$220／單點$120', group: '經典漢堡' },
+  { label: '擴鮮綠元氣摩力堡（植物肉）單點$120', group: '經典漢堡' },
+  { label: '擴鮮綠摩斯炸蝦堡 套餐$185／單點$85', group: '經典漢堡' },
+  { label: '擴鮮綠烤雞起司堡 單點$80', group: '經典漢堡' },
+  { label: '蜜汁烤雞起司堡 套餐$180／單點$80', group: '經典漢堡' },
+  { label: '蜜汁烤雞腿堡 單點$75', group: '經典漢堡' },
+  { label: '摩斯漢堡（原味/辣味）單點$70', group: '經典漢堡' },
+  // 熱狗堡
+  { label: '摩斯熱狗堡 單點$55', group: '熱狗堡' },
+  { label: '辣味吉利熱狗堡 單點$70', group: '熱狗堡' },
+  // 沙拉
+  { label: '雞肉地瓜纖蔬沙拉 $70（含醬+$21）', group: '沙拉' },
+  { label: '夏威夷元氣蔬菜沙拉 $55（含醬+$21）', group: '沙拉' },
+];
+
+const sideAddons = [
+  { label: '摩斯肉醬薯條 +$10' },
+  { label: '蜻蜓蝦薯餅組 +$5' },
+  { label: '摩斯雞塊（6塊）+$0' },
+  { label: '雞塊月亮薯條組 +$10' },
+  { label: '辣味和風雞腿堆雙拼套餐 +$35' },
+  { label: '和風炸雞 $85' },
+  { label: '月亮薯條 $65' },
+  { label: '薯條 $65' },
+  { label: '摩斯雞塊 $65（M）／$49（8塊）' },
+  { label: '干貝白醬可樂餅(1個) $40' },
+  { label: '圈圈蝦餅 $50' },
+  { label: 'MOS熱狗 $50' },
+  { label: '方塊薯餅 $35' },
+];
+
+const drinks = [
+  { label: '熱可可拿鐵咖啡 $85（M）' },
+  { label: '豆奶拿鐵咖啡(冰/熱) $80（M）' },
+  { label: '豆奶奶茶(冰/熱) $75（M）' },
+  { label: '精選拿鐵咖啡 $70（M）／$90（L）' },
+  { label: '摩斯咖啡(冰/熱) $50（M）／$70（L）' },
+  { label: '摩斯經典奶茶 $60（M）' },
+  { label: '摩斯奶茶 $60（M）' },
+  { label: '柚子冰茶 $65' },
+  { label: '摩斯荔枝冰沙 $65（M）' },
+  { label: '摩斯抹茶歐蕾(冰) $65（M）' },
+  { label: '冰紅茶/冰綠茶 $35（M）／$40（L）' },
+  { label: '100%台灣冰綠茶 $40（M）' },
+  { label: '摩斯冰可可 $50（M）' },
+  { label: '摩斯鮮乳/摩斯蘋果汁 $45' },
+  { label: '黑芝麻豆奶 $45' },
+  { label: '橙香熱茶 $50（M）' },
+  { label: '紫蘇園蜜茶 $50' },
+  { label: '柚子熱茶 $50' },
+  { label: '摩斯玄米煎茶 $45（M）／$50（L）' },
+  { label: '摩斯熱紅茶 $40' },
+  { label: '和風蔬汁蔬菜湯 $55' },
+  { label: '大麥仁紅豆湯 $55' },
+  { label: '鮮蔬濃湯 $55' },
+  { label: '玉米濃湯 $55' },
+];
+
+const desserts = [
+  { label: '香蒜巧克力米派(1個) +$45' },
+  { label: '焦糖布丁 +$55' },
+  { label: '巴斯克乳酪蛋糕 +$80' },
+  { label: '抹茶紅豆米派 $45' },
+  { label: '蘋果鳳梨蒟蒻 $45' },
+  { label: '芭樂檸檬蒟蒻 $45' },
+  { label: '蜂蜜檸檬/葡萄蒟蒻 $40' },
+];
+
+// ── 建立主餐 <select> ─────────────────────────
+function buildMainSelect(id) {
+  let html = '<option value="">請選擇主餐</option>';
+  let lastGroup = '';
+  mains.forEach(m => {
+    if (m.group !== lastGroup) {
+      if (lastGroup) html += '</optgroup>';
+      html += `<optgroup label="── ${m.group} ──">`;
+      lastGroup = m.group;
+    }
+    html += `<option value="${m.label}">${m.label}</option>`;
+  });
+  if (lastGroup) html += '</optgroup>';
+  return `<select id="${id}" class="p-main" required>${html}</select>`;
+}
+
+function buildChecks(list, className) {
+  return list.map(item =>
+    `<label><input type="checkbox" class="${className}" value="${item.label}"> ${item.label}</label>`
+  ).join('');
+}
+
+// ── 人員區 ───────────────────────────────────
+let personCount = 0;
+
+function addPerson() {
+  personCount++;
+  const id = personCount;
+  const div = document.createElement('div');
+  div.className = 'person-block';
+  div.id = `person-${id}`;
+  div.innerHTML = `
+    <div class="person-header">
+      <span>第 ${id} 位</span>
+      ${id > 1 ? `<button type="button" class="remove-btn" onclick="removePerson(${id})">✕ 移除</button>` : ''}
+    </div>
+    <div class="form-group">
+      <label>姓名／暱稱</label>
+      <input type="text" class="p-name" placeholder="例如：小明">
+    </div>
+    <div class="form-group">
+      <label>主餐選擇 <span class="req">*</span></label>
+      ${buildMainSelect(`main-${id}`)}
+    </div>
+    <div class="form-group">
+      <label>加購點心 / 副餐（套餐升級或單點，可複選）</label>
+      <div class="check-grid">${buildChecks(sideAddons, 'p-side')}</div>
+    </div>
+    <div class="form-group">
+      <label>飲料選擇（套餐換購或單點，可複選）</label>
+      <div class="check-grid">${buildChecks(drinks, 'p-drink')}</div>
+    </div>
+    <div class="form-group">
+      <label>甜點加購</label>
+      <div class="check-grid">${buildChecks(desserts, 'p-dessert')}</div>
+    </div>
+    <div class="form-group">
+      <label>個人特殊需求</label>
+      <input type="text" class="p-note" placeholder="例如：不要洋蔥、過敏食材">
+    </div>
+  `;
+  document.getElementById('personList').appendChild(div);
+}
+
+function removePerson(id) {
+  const el = document.getElementById(`person-${id}`);
+  if (el) el.remove();
+}
+
+addPerson();
+
+// ── 送出 ─────────────────────────────────────
+document.getElementById('orderForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const notes = document.getElementById('notes').value;
+
+  const persons = [];
+  document.querySelectorAll('.person-block').forEach((block, i) => {
+    const pName = block.querySelector('.p-name').value || `第${i+1}位`;
+    const main = block.querySelector('.p-main').value || '未選';
+    const sides = [...block.querySelectorAll('.p-side:checked')].map(s => s.value);
+    const drinksSel = [...block.querySelectorAll('.p-drink:checked')].map(s => s.value);
+    const desserts2 = [...block.querySelectorAll('.p-dessert:checked')].map(s => s.value);
+    const note = block.querySelector('.p-note').value;
+    persons.push({ pName, main, sides, drinksSel, desserts2, note });
+  });
+
+  let rows = persons.map(p => `
+    <tr>
+      <td><b>${p.pName}</b></td>
+      <td>${p.main}</td>
+      <td>${p.sides.length ? p.sides.join('<br>') : '—'}</td>
+      <td>${p.drinksSel.length ? p.drinksSel.join('<br>') : '—'}</td>
+      <td>${p.desserts2.length ? p.desserts2.join('<br>') : '—'}</td>
+      <td>${p.note || '—'}</td>
+    </tr>
+  `).join('');
+
+  const html = `
+    <div class="summary-info">
+      🏢 <b>人事室聚餐｜MOS BURGER 摩斯漢堡</b><br>
+      🗓️ 2026年6月15日（一）中午 12:00<br>
+      ${notes ? `📝 <b>備註：</b>${notes}` : ''}
+    </div>
+    <table class="summary-table">
+      <thead><tr><th>姓名</th><th>主餐</th><th>點心/副餐</th><th>飲料</th><th>甜點</th><th>需求</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  document.getElementById('summaryContent').innerHTML = html;
+  document.getElementById('summary').style.display = 'block';
+  document.getElementById('summary').scrollIntoView({ behavior:'smooth' });
+});
+
+function copySummary() {
+  const notes = document.getElementById('notes').value;
+  let text = `【MOS BURGER 摩斯漢堡｜人事室聚餐點餐】\n`;
+  text += `日期：2026/06/15（一）　時間：12:00\n`;
+  if (notes) text += `備註：${notes}\n`;
+  text += `\n─── 各人點餐 ───\n`;
+
+  document.querySelectorAll('.person-block').forEach((block, i) => {
+    const pName = block.querySelector('.p-name').value || `第${i+1}位`;
+    const main = block.querySelector('.p-main').value || '未選';
+    const sides = [...block.querySelectorAll('.p-side:checked')].map(s => s.value);
+    const drinksSel = [...block.querySelectorAll('.p-drink:checked')].map(s => s.value);
+    const desserts2 = [...block.querySelectorAll('.p-dessert:checked')].map(s => s.value);
+    const note = block.querySelector('.p-note').value;
+    text += `\n${pName}\n  主餐：${main}\n`;
+    if (sides.length) text += `  點心/副餐：${sides.join('、')}\n`;
+    if (drinksSel.length) text += `  飲料：${drinksSel.join('、')}\n`;
+    if (desserts2.length) text += `  甜點：${desserts2.join('、')}\n`;
+    if (note) text += `  需求：${note}\n`;
+  });
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert('✅ 已複製！可直接貼到 LINE 傳給彙整人。');
+  });
+}
+</script>
+</body>
+</html>
